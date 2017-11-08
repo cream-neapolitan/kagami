@@ -85,28 +85,28 @@ class Menu(tk.Menu):
             ("separator", {
                 'entry_type': 'separator'
             }),
-            ('Cartesian Quadrant 1 - Top-right portion', {
-                'entry_type': 'radio',
-                'command': lambda:
-                    gui_processor.update_thumb_container(master),
-                'variable': master.reflection_mode,
-                'value': 'ne'
-            }),
-            ('Cartesian Quadrant 2 - Top-left portion', {
+            ('Quadrant 1 - Top-left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'nw'
             }),
-            ('Cartesian Quadrant 3 - Bottom-left portion', {
+            ('Quadrant 2 - Top-right portion', {
+                'entry_type': 'radio',
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
+                'variable': master.reflection_mode,
+                'value': 'ne'
+            }),
+            ('Quadrant 3 - Bottom-left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'sw'
             }),
-            ('Cartesian Quadrant 4 - Bottom-right portion', {
+            ('Quadrant 4 - Bottom-right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     gui_processor.update_thumb_container(master),
@@ -163,10 +163,10 @@ class DualImageContainer(tk.Frame):
         # Place UI elements
         self.orig_image_container = BaseImageContainer(
             self, image=self.thumb_original, header="Original")
-        self.refl_image_thumbnail = BaseImageContainer(
+        self.refl_image_container = BaseImageContainer(
             self, image=self.thumb_reflected, header="Reflected")
         self.orig_image_container.pack(side="left")
-        self.refl_image_thumbnail.pack(side="left")
+        self.refl_image_container.pack(side="left")
 
 
 class MainApps(tk.Tk):

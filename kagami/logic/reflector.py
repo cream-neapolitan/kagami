@@ -4,6 +4,7 @@ from PIL import Image
 from PIL.ImageOps import mirror, flip
 from re import match
 
+
 def reflect_image(source, reflection_mode):
     """Reflect a pillow Image object to create symmetric image
 

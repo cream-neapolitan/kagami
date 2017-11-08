@@ -1,5 +1,7 @@
 import tkinter as tk
 from collections import OrderedDict
+from PIL import Image, ImageTk
+
 from kagami.logic import menulogic, gui_processor
 
 
@@ -121,22 +123,32 @@ class Menu(tk.Menu):
 
 
 class BaseImageContainer(tk.Frame):
-    def __init__(self, master, header="Default", content="text"):
+    def __init__(self, master, image, header="Default"):
         super().__init__(master, padx=10, pady=10)
         self.labelframe = tk.LabelFrame(self, text=header)
         self.labelframe.pack()
 
-        self.label = tk.Label(self.labelframe, text=content, width=20)
+        # Create thumbnail
+        self.thumb = image.copy()
+        width, height = master.thumb_size
+        self.thumb.thumbnail(master.thumb_size)
+        widget = ImageTk.PhotoImage(self.thumb)
+
+        self.label = tk.Label(
+            self.labelframe, image=widget,
+            width=width + 20, height=height + 20)
+        self.label.image = widget
         self.label.pack()
 
 
 class DualImageContainer(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.thumb_size = (200, 200)
         self.orig_image_container = BaseImageContainer(
-            self, header="Original")
+            self, image=master.fullsize_image, header="Original")
         self.proc_image_container = BaseImageContainer(
-            self, header="Processed", content=master.reflection_mode.get())
+            self, image=master.fullsize_image, header="Processed")
         self.orig_image_container.pack(side="left")
         self.proc_image_container.pack(side="left")
 
@@ -149,6 +161,9 @@ class MainApps(tk.Tk):
         self.basetitle = basetitle
         self.current_title = basetitle
         self.title(self.current_title)
+
+        self.path = 'kagami/asset/default.png'
+        self.fullsize_image = Image.open(self.path)
         self.reflection_mode = tk.StringVar(self, value='w')
 
         # Construct UI element

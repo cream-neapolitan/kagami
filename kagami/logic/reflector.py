@@ -3,6 +3,10 @@
 from PIL import Image
 from PIL.ImageOps import mirror, flip
 
+# Process incoming Image with specified reflection
+def reflect_image(ori, reflection_mode):
+    return ori
+
 
 # Image Flipping function
 def mirror_top(ori):

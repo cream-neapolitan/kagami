@@ -56,25 +56,29 @@ class Menu(tk.Menu):
         reflection_menu_entries = OrderedDict([
             ('Vertical axis - Left portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'w'
             }),
             ('Vertical axis - Right portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'e'
             }),
             ('Horizontal axis - Top portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'n'
             }),
             ('Horizontal axis - Bottom portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 's'
             }),
@@ -83,25 +87,29 @@ class Menu(tk.Menu):
             }),
             ('Cartesian Quadrant 1 - Top-right portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'ne'
             }),
             ('Cartesian Quadrant 2 - Top-left portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'nw'
             }),
             ('Cartesian Quadrant 3 - Bottom-left portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'sw'
             }),
             ('Cartesian Quadrant 4 - Bottom-right portion', {
                 'entry_type': 'radio',
-                'command': lambda: gui_processor.update_thumb(master),
+                'command': lambda:
+                    gui_processor.update_thumb_container(master),
                 'variable': master.reflection_mode,
                 'value': 'se'
             }),
@@ -142,23 +150,23 @@ class BaseImageContainer(tk.Frame):
 class DualImageContainer(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        self.thumb_size = (200, 200)
+        self.thumb_size = (240, 240)
 
         # Create original thumbnail
-        self.thumb_original = master.fullsize_image.copy()
+        self.thumb_original = master.image_fullsize.copy()
         self.thumb_original.thumbnail(self.thumb_size)
 
-        # Create processed thumbnail
-        self.thumb_proc = reflector.reflect_image(
+        # Create reflected thumbnail
+        self.thumb_reflected = reflector.reflect_image(
             self.thumb_original, master.reflection_mode.get())
 
         # Place UI elements
         self.orig_image_container = BaseImageContainer(
             self, image=self.thumb_original, header="Original")
-        self.proc_image_container = BaseImageContainer(
-            self, image=self.thumb_proc, header="Processed")
+        self.refl_image_thumbnail = BaseImageContainer(
+            self, image=self.thumb_reflected, header="Reflected")
         self.orig_image_container.pack(side="left")
-        self.proc_image_container.pack(side="left")
+        self.refl_image_thumbnail.pack(side="left")
 
 
 class MainApps(tk.Tk):
@@ -171,7 +179,7 @@ class MainApps(tk.Tk):
         self.title(self.current_title)
 
         self.path = 'kagami/asset/default.png'
-        self.fullsize_image = Image.open(self.path)
+        self.image_fullsize = Image.open(self.path)
         self.reflection_mode = tk.StringVar(self, value='w')
 
         # Construct UI element

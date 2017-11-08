@@ -2,7 +2,7 @@ import tkinter as tk
 from collections import OrderedDict
 from PIL import Image, ImageTk
 
-from kagami.logic import menulogic, gui_processor
+from kagami.logic import menulogic, gui_processor, reflector
 
 
 class MenuCascade(tk.Menu):
@@ -128,11 +128,9 @@ class BaseImageContainer(tk.Frame):
         self.labelframe = tk.LabelFrame(self, text=header)
         self.labelframe.pack()
 
-        # Create thumbnail
-        self.thumb = image.copy()
+        # Create thumbnail widget
         width, height = master.thumb_size
-        self.thumb.thumbnail(master.thumb_size)
-        widget = ImageTk.PhotoImage(self.thumb)
+        widget = ImageTk.PhotoImage(image)
 
         self.label = tk.Label(
             self.labelframe, image=widget,
@@ -145,10 +143,20 @@ class DualImageContainer(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.thumb_size = (200, 200)
+
+        # Create original thumbnail
+        self.thumb_original = master.fullsize_image.copy()
+        self.thumb_original.thumbnail(self.thumb_size)
+
+        # Create processed thumbnail
+        self.thumb_proc = reflector.reflect_image(
+            self.thumb_original, master.reflection_mode.get())
+
+        # Place UI elements
         self.orig_image_container = BaseImageContainer(
-            self, image=master.fullsize_image, header="Original")
+            self, image=self.thumb_original, header="Original")
         self.proc_image_container = BaseImageContainer(
-            self, image=master.fullsize_image, header="Processed")
+            self, image=self.thumb_proc, header="Processed")
         self.orig_image_container.pack(side="left")
         self.proc_image_container.pack(side="left")
 

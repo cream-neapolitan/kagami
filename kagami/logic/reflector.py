@@ -2,7 +2,7 @@
 
 from PIL import Image
 from PIL.ImageOps import mirror, flip
-
+from re import match
 
 def reflect_image(source, reflection_mode):
     """Reflect a pillow Image object to create symmetric image
@@ -19,8 +19,25 @@ def reflect_image(source, reflection_mode):
     -------
     PIL.Image
         Image object from reflected source
+
+    Raises
+    ------
+    ValueError
+        Provided reflection_mode is not compass orientation
     """
-    return source
+    result = source
+    reflection_function = {
+        'n': mirror_top,
+        's': mirror_bottom,
+        'w': mirror_left,
+        'e': mirror_right
+    }
+
+    if match(r'^[ns][ew]?$|^[ew]$', reflection_mode):
+        for c in reflection_mode:
+            result = reflection_function[c](result)
+        return result
+    raise ValueError('Orientation not recognized')
 
 
 # Image Flipping function

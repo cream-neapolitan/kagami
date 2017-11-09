@@ -202,7 +202,8 @@ class MainApps(tk.Tk):
         self.current_title = basetitle
         self.title(self.current_title)
 
-        self.path = 'kagami/asset/default.png'
+        # Set Default Path
+        self.default_path_load()
         self.reflection_mode = tk.StringVar(self, value='w')
 
         # Construct UI element
@@ -214,3 +215,12 @@ class MainApps(tk.Tk):
     def generate_images(self):
         self.image_fullsize = Image.open(self.path)
         self.image_container.refresh_all_thumbnails()
+
+    def default_path_load(self):
+        import sys
+        from os.path import join
+
+        if hasattr(sys, '_MEIPASS'):
+            self.path = join(sys._MEIPASS, "asset/default.png")
+        else:
+            self.path = 'asset/default.png'

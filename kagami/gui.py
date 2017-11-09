@@ -11,20 +11,36 @@ class MenuCascade(tk.Menu):
     def __init__(self, master, entries, label="Menu Entries"):
         super().__init__(master, tearoff=False)
         master.add_cascade(label=label, menu=self)
-        for label, options in entries.items():
-            self.generate_entry(label=label, **options)
+        for label, kwargs in entries.items():
+            self.generate_entry(label=label, **kwargs)
 
-    def generate_entry(self, label="My Label", **options):
+    def generate_entry(self, label="My Label", **kwargs):
+        options = {
+            'entry_type': 'separator',
+            'label': 'Entry',
+            'command': None,
+            'variable': None,
+            'value': None,
+            'accelerator': None,
+            'underline': None
+        }
+        options.update(kwargs)
+
         if options['entry_type'] == "separator":
             self.add_separator()
         elif options['entry_type'] == "command":
-            self.add_command(label=label, command=options['command'])
+            self.add_command(
+                label=label, command=options['command'],
+                underline=options['underline'],
+                accelerator=options['accelerator'])
         elif options['entry_type'] == "radio":
             self.add_radiobutton(
                 label=label,
                 command=options['command'],
                 variable=options['variable'],
-                value=options['value'])
+                value=options['value'],
+                underline=options['underline'],
+                accelerator=options['accelerator'])
         else:
             raise KeyError("Wrong type of menu entries")
 
@@ -34,23 +50,32 @@ class Menu(tk.Menu):
         super().__init__()
         self.master = master
         self.master.configure(menu=self)
+        self.menu_construct()
+        self.menu_bind_keys()
 
-        # Construct file menu
+    def menu_construct(self):
         file_menu_entries = OrderedDict([
             ("Open", {
                 'entry_type': 'command',
-                'command': self.browse
+                'command': self.browse,
+                'accelerator': 'ctrl+O'
+            }),
+            ("Open Default", {
+                'entry_type': 'command',
+                'command': self.master.default_image_reload
+            }),
+            ("Save", {
+                'entry_type': 'command',
+                'command': self.save,
+                'accelerator': 'ctrl+S'
             }),
             ("separator", {
                 'entry_type': 'separator'
             }),
-            ("Save", {
-                'entry_type': 'command',
-                'command': self.save
-            }),
             ("Quit", {
                 'entry_type': 'command',
-                'command': self.master.quit
+                'command': self.master.quit,
+                'accelerator': 'ctrl+Q'
             })
         ])
         MenuCascade(self, file_menu_entries, label="File")
@@ -61,28 +86,28 @@ class Menu(tk.Menu):
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'w'
             }),
             ('Vertical axis - Right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'e'
             }),
             ('Horizontal axis - Top portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'n'
             }),
             ('Horizontal axis - Bottom portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 's'
             }),
             ("separator", {
@@ -92,28 +117,28 @@ class Menu(tk.Menu):
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'nw'
             }),
             ('Quadrant 2 - Top-right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'ne'
             }),
             ('Quadrant 3 - Bottom-left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'sw'
             }),
             ('Quadrant 4 - Bottom-right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
                     self.master.image_container.refresh_all_thumbnails(),
-                'variable': master.reflection_mode,
+                'variable': self.master.reflection_mode,
                 'value': 'se'
             }),
         ])
@@ -132,11 +157,16 @@ class Menu(tk.Menu):
         ])
         MenuCascade(self, about_menu_entries, label="About")
 
-    def browse(self):
+    def menu_bind_keys(self):
+        self.master.bind_all("<Control-o>", self.browse)
+        self.master.bind_all("<Control-s>", self.save)
+        self.master.bind_all("<Control-q>", self.master.quit)
+
+    def browse(self, event=None):
         self.master.path = askopenfilename()
         self.master.generate_images()
 
-    def save(self):
+    def save(self, event=None):
         result = reflector.reflect_image(
             self.master.image_fullsize, self.master.reflection_mode.get())
         save_path = asksaveasfilename()
@@ -183,7 +213,7 @@ class DualImageContainer(tk.Frame):
         self.orig_image_container.pack(side="left")
         self.refl_image_container.pack(side="left")
 
-    def refresh_all_thumbnails(self):
+    def refresh_all_thumbnails(self, event=None):
         self.thumb_original = self.master.image_fullsize.copy()
         self.thumb_original.thumbnail(self.thumb_size)
         self.orig_image_container.update_thumbnail(self.thumb_original)
@@ -224,3 +254,7 @@ class MainApps(tk.Tk):
             self.path = join(sys._MEIPASS, "asset/default.png")
         else:
             self.path = 'asset/default.png'
+
+    def default_image_reload(self):
+        self.default_path_load()
+        self.generate_images()

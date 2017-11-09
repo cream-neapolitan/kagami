@@ -1,8 +1,9 @@
+import os.path
 import tkinter as tk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from collections import OrderedDict
 from PIL import Image
 from PIL.ImageTk import PhotoImage
-from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 from kagami.logic import menulogic, reflector
 
@@ -57,16 +58,16 @@ class Menu(tk.Menu):
         file_menu_entries = OrderedDict([
             ("Open", {
                 'entry_type': 'command',
-                'command': self.browse,
+                'command': self.master.browse,
                 'accelerator': 'ctrl+O'
             }),
             ("Open Default", {
                 'entry_type': 'command',
-                'command': self.master.default_image_reload
+                'command': self.master.default_image_load
             }),
             ("Save", {
                 'entry_type': 'command',
-                'command': self.save,
+                'command': self.master.save,
                 'accelerator': 'ctrl+S'
             }),
             ("separator", {
@@ -158,19 +159,9 @@ class Menu(tk.Menu):
         MenuCascade(self, about_menu_entries, label="About")
 
     def menu_bind_keys(self):
-        self.master.bind_all("<Control-o>", self.browse)
-        self.master.bind_all("<Control-s>", self.save)
+        self.master.bind_all("<Control-o>", self.master.browse)
+        self.master.bind_all("<Control-s>", self.master.save)
         self.master.bind_all("<Control-q>", self.master.quit)
-
-    def browse(self, event=None):
-        self.master.path = askopenfilename()
-        self.master.generate_images()
-
-    def save(self, event=None):
-        result = reflector.reflect_image(
-            self.master.image_fullsize, self.master.reflection_mode.get())
-        save_path = asksaveasfilename()
-        result.save(save_path)
 
 
 class BaseImageContainer(tk.Frame):
@@ -229,32 +220,67 @@ class MainApps(tk.Tk):
 
         # Set up basic working variable
         self.basetitle = basetitle
-        self.current_title = basetitle
-        self.title(self.current_title)
 
-        # Set Default Path
-        self.default_path_load()
+        # Set up image related variable
         self.reflection_mode = tk.StringVar(self, value='w')
+        self.allowed_types = [
+            ('Supported Extension', ('.png', '.jpg')),
+            ('PNG File', '.png'),
+            ('JPG File', '.jpg')
+        ]
 
         # Construct UI element
         Menu(self)
         self.image_container = DualImageContainer(self)
         self.image_container.pack()
-        self.generate_images()
+        self.default_image_load()
 
     def generate_images(self):
         self.image_fullsize = Image.open(self.path)
         self.image_container.refresh_all_thumbnails()
 
-    def default_path_load(self):
+    def default_image_load(self):
         import sys
-        from os.path import join
 
         if hasattr(sys, '_MEIPASS'):
-            self.path = join(sys._MEIPASS, "asset/default.png")
+            self.path = os.path.join(sys._MEIPASS, "asset/default.png")
         else:
             self.path = 'asset/default.png'
 
-    def default_image_reload(self):
-        self.default_path_load()
+        self.current_title = self.basetitle
+        self.title(self.current_title)
         self.generate_images()
+
+    def browse(self, event=None):
+        self.path = askopenfilename(filetypes=self.allowed_types)
+        self.title('Kagami - {}'.format(os.path.split(self.path)[1]))
+        self.generate_images()
+
+    def save(self, event=None):
+        ext = ''
+        save_path = 'pass'
+
+        while ext not in ('.jpg', '.png') and save_path:
+            # Get new filename by splitting filename and extension of original
+            # file and then slip current reflection mode inbetween
+            default_filename = '{0}_{2}{1}'.format(
+                *os.path.splitext(os.path.split(self.path)[1]),
+                self.reflection_mode.get())
+
+            save_path = asksaveasfilename(
+                initialfile=default_filename,
+                filetypes=self.allowed_types,
+                defaultextension='.png'
+            )
+
+            # Check if extension if entered. Dialog will open again if
+            # extension is not entered properly.
+            try:
+                ext = os.path.splitext(save_path)[1]
+            except TypeError:
+                break
+
+        if save_path:
+            result = reflector.reflect_image(self.image_fullsize,
+                                             self.reflection_mode.get())
+            result.save(save_path)

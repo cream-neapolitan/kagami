@@ -2,6 +2,7 @@ import tkinter as tk
 from collections import OrderedDict
 from PIL import Image
 from PIL.ImageTk import PhotoImage
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 from kagami.logic import menulogic, reflector
 
@@ -31,24 +32,25 @@ class MenuCascade(tk.Menu):
 class Menu(tk.Menu):
     def __init__(self, master):
         super().__init__()
-        master.configure(menu=self)
+        self.master = master
+        self.master.configure(menu=self)
 
         # Construct file menu
         file_menu_entries = OrderedDict([
             ("Open", {
                 'entry_type': 'command',
-                'command': menulogic.browse_file
+                'command': self.browse
             }),
             ("separator", {
                 'entry_type': 'separator'
             }),
             ("Save", {
                 'entry_type': 'command',
-                'command': menulogic.save_file
+                'command': self.save
             }),
             ("Quit", {
                 'entry_type': 'command',
-                'command': master.quit
+                'command': self.master.quit
             })
         ])
         MenuCascade(self, file_menu_entries, label="File")
@@ -58,28 +60,28 @@ class Menu(tk.Menu):
             ('Vertical axis - Left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'w'
             }),
             ('Vertical axis - Right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'e'
             }),
             ('Horizontal axis - Top portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'n'
             }),
             ('Horizontal axis - Bottom portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 's'
             }),
@@ -89,28 +91,28 @@ class Menu(tk.Menu):
             ('Quadrant 1 - Top-left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'nw'
             }),
             ('Quadrant 2 - Top-right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'ne'
             }),
             ('Quadrant 3 - Bottom-left portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'sw'
             }),
             ('Quadrant 4 - Bottom-right portion', {
                 'entry_type': 'radio',
                 'command': lambda:
-                    gui_processor.update_thumb_container(master),
+                    self.master.image_container.refresh_all_thumbnails(),
                 'variable': master.reflection_mode,
                 'value': 'se'
             }),
@@ -129,6 +131,16 @@ class Menu(tk.Menu):
             }),
         ])
         MenuCascade(self, about_menu_entries, label="About")
+
+    def browse(self):
+        self.master.path = askopenfilename()
+        self.master.generate_images()
+
+    def save(self):
+        result = reflector.reflect_image(
+            self.master.image_fullsize, self.master.reflection_mode.get())
+        save_path = asksaveasfilename()
+        result.save(save_path)
 
 
 class BaseImageContainer(tk.Frame):

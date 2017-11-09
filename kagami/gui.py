@@ -1,8 +1,9 @@
 import tkinter as tk
 from collections import OrderedDict
-from PIL import Image, ImageTk
+from PIL import Image
+from PIL.ImageTk import PhotoImage
 
-from kagami.logic import menulogic, gui_processor, reflector
+from kagami.logic import menulogic, reflector
 
 
 class MenuCascade(tk.Menu):
@@ -131,42 +132,53 @@ class Menu(tk.Menu):
 
 
 class BaseImageContainer(tk.Frame):
-    def __init__(self, master, image, header="Default"):
+    def __init__(self, master, header="Default"):
         super().__init__(master, padx=10, pady=10)
         self.labelframe = tk.LabelFrame(self, text=header)
         self.labelframe.pack()
 
         # Create thumbnail widget
         width, height = master.thumb_size
-        widget = ImageTk.PhotoImage(image)
+        widget = PhotoImage(Image.new('RGB', (1, 1)))
 
-        self.label = tk.Label(
+        self.ui_image = tk.Label(
             self.labelframe, image=widget,
             width=width + 20, height=height + 20)
-        self.label.image = widget
-        self.label.pack()
+        self.ui_image.image = widget
+        self.ui_image.pack()
+
+    def update_thumbnail(self, image):
+        widget = PhotoImage(image)
+        self.ui_image.configure(image=widget)
+        self.ui_image.image = widget
+        self.ui_image.pack()
 
 
 class DualImageContainer(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.master = master
         self.thumb_size = (240, 240)
 
-        # Create original thumbnail
-        self.thumb_original = master.image_fullsize.copy()
-        self.thumb_original.thumbnail(self.thumb_size)
-
-        # Create reflected thumbnail
-        self.thumb_reflected = reflector.reflect_image(
-            self.thumb_original, master.reflection_mode.get())
+        self.thumb_original = None
+        self.thumb_reflected = None
 
         # Place UI elements
         self.orig_image_container = BaseImageContainer(
-            self, image=self.thumb_original, header="Original")
+            self, header="Original")
         self.refl_image_container = BaseImageContainer(
-            self, image=self.thumb_reflected, header="Reflected")
+            self, header="Reflected")
         self.orig_image_container.pack(side="left")
         self.refl_image_container.pack(side="left")
+
+    def refresh_all_thumbnails(self):
+        self.thumb_original = self.master.image_fullsize.copy()
+        self.thumb_original.thumbnail(self.thumb_size)
+        self.orig_image_container.update_thumbnail(self.thumb_original)
+
+        self.thumb_reflected = reflector.reflect_image(
+            self.thumb_original, self.master.reflection_mode.get())
+        self.refl_image_container.update_thumbnail(self.thumb_reflected)
 
 
 class MainApps(tk.Tk):
@@ -179,11 +191,14 @@ class MainApps(tk.Tk):
         self.title(self.current_title)
 
         self.path = 'kagami/asset/default.png'
-        self.image_fullsize = Image.open(self.path)
         self.reflection_mode = tk.StringVar(self, value='w')
 
         # Construct UI element
         Menu(self)
-        self.infotext = DualImageContainer(self)
+        self.image_container = DualImageContainer(self)
+        self.image_container.pack()
+        self.generate_images()
 
-        self.infotext.pack()
+    def generate_images(self):
+        self.image_fullsize = Image.open(self.path)
+        self.image_container.refresh_all_thumbnails()

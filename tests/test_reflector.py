@@ -7,59 +7,51 @@ source = Image.open('tests/asset/testbed.png')
 asset_folder = 'tests/asset/'
 
 
-class ReflectorTestCase(unittest.TestCase):
-    def assertIdenticalImage(self, func, asset, *args, **kwargs):
-        """Assert processed source image is the exact same with provided asset
+def load_asset(filename):
+    asset = join(asset_folder, filename)
+    return Image.open(asset)
 
-        Parameters
-        ----------
-        func : function
-            Function used to process source image
-        asset : TYPE
-            Image asset to be compared
-        *args, **kwargs
-            Argument of processing function
-        """
-        actual = func(*args, **kwargs)
-        expected = Image.open(join(asset_folder, asset))
-        diff = ImageChops.difference(actual, expected).getbbox()
+
+class ReflectorTestCase(unittest.TestCase):
+    def assertIdenticalImage(self, image1, image2):
+        diff = ImageChops.difference(image1, image2).getbbox()
         self.assertEqual(diff, None, "The two image is identical")
 
 
 class ReflectorEngineTest(ReflectorTestCase):
     def test_mirror_left(self):
-        self.assertIdenticalImage(
-            reflector.mirror_left, 'testbed_w.png', source)
+        self.assertIdenticalImage(load_asset('testbed_w.png'),
+                                  reflector.mirror_left(source))
 
     def test_mirror_right(self):
-        self.assertIdenticalImage(
-            reflector.mirror_right, 'testbed_e.png', source)
+        self.assertIdenticalImage(load_asset('testbed_e.png'),
+                                  reflector.mirror_right(source))
 
     def test_mirror_top(self):
-        self.assertIdenticalImage(
-            reflector.mirror_top, 'testbed_n.png', source)
+        self.assertIdenticalImage(load_asset('testbed_n.png'),
+                                  reflector.mirror_top(source))
 
     def test_mirror_bottom(self):
-        self.assertIdenticalImage(
-            reflector.mirror_bottom, 'testbed_s.png', source)
+        self.assertIdenticalImage(load_asset('testbed_s.png'),
+                                  reflector.mirror_bottom(source))
 
 
 class ReflectorWrapperTest(ReflectorTestCase):
     def test_call_wrapper_w(self):
-        self.assertIdenticalImage(
-            reflector.reflect_image, 'testbed_w.png', source, 'w')
+        self.assertIdenticalImage(load_asset('testbed_w.png'),
+                                  reflector.reflect_image(source, 'w'))
 
     def test_call_wrapper_n(self):
-        self.assertIdenticalImage(
-            reflector.reflect_image, 'testbed_n.png', source, 'n')
+        self.assertIdenticalImage(load_asset('testbed_n.png'),
+                                  reflector.reflect_image(source, 'n'))
 
     def test_call_wrapper_nw(self):
-        self.assertIdenticalImage(
-            reflector.reflect_image, 'testbed_nw.png', source, 'nw')
+        self.assertIdenticalImage(load_asset('testbed_nw.png'),
+                                  reflector.reflect_image(source, 'nw'))
 
     def test_call_wrapper_se(self):
-        self.assertIdenticalImage(
-            reflector.reflect_image, 'testbed_se.png', source, 'se')
+        self.assertIdenticalImage(load_asset('testbed_se.png'),
+                                  reflector.reflect_image(source, 'se'))
 
 
 if __name__ == '__main__':
